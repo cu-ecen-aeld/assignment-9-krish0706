@@ -1,0 +1,102 @@
+#!/bin/sh
+function setup_device(){
+    if [ $# -ne 3 ]; then
+        echo "Invalid usage of $0 function"
+        echo "Usage: $0  <device_name> <major_number> <minor_number>"
+        echo "Note: Call after calling insmod"
+        echo "Used to setup device node in /dev/"
+        exit 1
+    fi
+
+    device=$1
+    major=$2
+    minor=$3
+
+    mode="664"
+    group="staff"
+
+    if [ ! -z ${major} ]; then
+        rm -f /dev/${device} 
+        mknod /dev/${device} c $major $minor
+        chgrp $group /dev/${device}
+        chmod $mode /dev/${device}
+    else
+        echo "$device not found in /proc/devices"
+        exit 1
+    fi
+}
+
+function clean_device(){
+    if [ $# -ne 1 ]; then
+        echo "Invalid usage of $0 function"
+        echo "Usage: $0 <device_name>"
+        echo "Note: Call after removing module with rmmod"
+        echo "Used to clean up device nodes in /dev/"
+        exit 1
+    fi
+
+    device=$1
+    rm -f /dev/${device}
+}
+
+# exit immediately on error
+set -e
+
+case "$1" in
+    start)
+        echo "Loading S98lddmodules"
+        modprobe hello
+        # Load modules and setup device nodes
+        insmod /lib/modules/6.1.44/extra/scull.ko || exit 1
+        major=$(awk "\$2==\"scull\" {print \$1}" /proc/devices)
+        setup_device "scull0" $major 0
+        setup_device "scull1" $major 1
+        setup_device "scull2" $major 2
+        setup_device "scull3" $major 3
+        ln -sf scull0 /dev/scull
+
+        setup_device "scullpipe0" $major 4
+        setup_device "scullpipe1" $major 5
+        setup_device "scullpipe2" $major 6
+        setup_device "scullpipe3" $major 7
+        ln -sf scullpipe0 /dev/scullpipe
+
+        setup_device "scullsingle" $major 8
+        setup_device "sculluid" $major 9
+        setup_device "scullwuid" $major 10
+        setup_device "scullpriv" $major 11
+
+        insmod /lib/modules/6.1.44/extra/faulty.ko || exit 1
+        major=$(awk "\$2==\"faulty\" {print \$1}" /proc/devices)
+        setup_device "faulty" $major 0
+    ;;
+    stop)
+        echo "Removing S98lddmodules"
+
+        # remove module and clean up device nodes
+        rmmod hello
+        rmmod /lib/modules/6.1.44/extra/scull.ko || exit 1
+        clean_device "scull0" 
+        clean_device "scull1" 
+        clean_device "scull2" 
+        clean_device "scull3" 
+        clean_device "scullpipe0" 
+        clean_device "scullpipe1" 
+        clean_device "scullpipe2" 
+        clean_device "scullpipe3" 
+        clean_device "scullsingle" 
+        clean_device "sculluid" 
+        clean_device "scullwuid" 
+        clean_device "scullpriv" 
+        clean_device "scull" 
+        clean_device "scullpipe" 
+
+        rmmod /lib/modules/6.1.44/extra/faulty.ko || exit 1
+        clean_device "faulty" 
+    ;;
+    *)
+    echo "Usage: $0 {start|stop}"
+    exit 1
+esac 
+
+exit 0
