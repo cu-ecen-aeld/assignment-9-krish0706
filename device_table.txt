@@ -1,1 +1,2 @@
 /etc/init.d/S98lddmodules f 755 root root _ _ _ _ _
+/etc/init.d/S97aesdchar f 755 root root _ _ _ _ _
