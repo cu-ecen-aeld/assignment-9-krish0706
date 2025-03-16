@@ -4,7 +4,7 @@
 #
 ##############################################################
 
-AESDCHAR_VERSION = '53d920761508f56276126a38dc2e5cf744ec41df'
+AESDCHAR_VERSION = 'c5de76e2771f8cc2ea1f337f83fbe26936d9a5f5'
 AESDCHAR_SITE = 'git@github.com:cu-ecen-aeld/assignments-3-and-later-krish0706.git'
 AESDCHAR_SITE_METHOD = git
 AESDCHAR_GIT_SUBMODULES = YES
